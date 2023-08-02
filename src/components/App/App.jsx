@@ -18,28 +18,32 @@ export default function App() {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [page, setPage] = useState(1);
 
-const loadPicture = useCallback((prevData) => {
-  setStatus('pending');
+  const [errorKeyword, setErrorKeyword] = useState('');
 
-  api
-    .fetchPicture(requestPicture, page)
-    .then((res) => {
-      const data = res.data.hits.map(({ id, webformatURL, largeImageURL }) => ({
-        id,
-        webformatURL,
-        largeImageURL,
-      }));
-      const dataLength = res.data.hits.length;
+  const loadPicture = useCallback(() => {
+    setStatus('pending');
 
-      setPictureData((prevData) => [...prevData, ...data]);
-      setStatus('resolved');
-      setIsLoadingMore(prevData.length + dataLength !== res.data.totalHits);
-      if (dataLength === 0) {
-        toast.error('There is no picture for that name');
-      }
-    })
-    .catch((error) => console.log(error));
-}, [requestPicture, page]);
+    api
+      .fetchPicture(requestPicture, page)
+      .then((res) => {
+        const data = res.data.hits.map(({ id, webformatURL, largeImageURL }) => ({
+          id,
+          webformatURL,
+          largeImageURL,
+        }));
+        const dataLength = res.data.hits.length;
+
+        setPictureData((prevData) => [...prevData, ...data]);
+        setStatus('resolved');
+        setIsLoadingMore(dataLength === 12); 
+        if (dataLength === 0) {
+          setErrorKeyword(requestPicture);
+          toast.error(`Images for the category"${requestPicture}" were not found`);
+        }
+      })
+      .catch((error) => console.log(error));
+  }, [requestPicture, page]);
+
 
   useEffect(() => {
     if (requestPicture !== '') {
@@ -74,9 +78,9 @@ const loadPicture = useCallback((prevData) => {
     setLargeImage('');
   };
 
-  return (
-    <div className={css.app}>
-      <ToastContainer />
+return (
+  <div className={css.app}>
+    <ToastContainer />
       {status === 'idle' ? (
         <React.Fragment>
           <SearchBar onSubmit={handleFormSubmit} onError={handleSearchError} />
@@ -87,7 +91,7 @@ const loadPicture = useCallback((prevData) => {
       )}
 
       {status === 'resolved' && pictureData.length === 0 && (
-        <ImgErrorView message={`Cannot find photos for "${requestPicture}" category`} />
+        <ImgErrorView message={`Images for the category "${errorKeyword}" were not found.`} />
       )}
 
       {pictureData.length > 0 && (
