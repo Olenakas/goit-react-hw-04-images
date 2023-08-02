@@ -22,6 +22,7 @@ export default function App() {
 
   const loadPicture = useCallback(() => {
     setStatus('pending');
+    setPictureData([]);
 
     api
       .fetchPicture(requestPicture, page)
@@ -33,7 +34,7 @@ export default function App() {
         }));
         const dataLength = res.data.hits.length;
 
-        setPictureData((prevData) => [...prevData, ...data]);
+        setPictureData(data);        
         setStatus('resolved');
         setIsLoadingMore(dataLength === 12); 
         if (dataLength === 0) {
